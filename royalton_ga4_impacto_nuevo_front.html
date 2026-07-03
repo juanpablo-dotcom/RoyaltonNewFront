@@ -19,8 +19,8 @@
     --green-bg:#E9F7F0;
     --red:#C0392B;
     --red-bg:#FDECEA;
-    --yellow-bg:#FFF3B0;
-    --yellow-border:#E8B800;
+    --yellow-bg:#F7ECD9;
+    --yellow-border:var(--gold-light);
     --gray:#6B7280;
     --border:#E3E7E6;
   }
@@ -54,11 +54,13 @@
   .callout{
     border-radius:10px; padding:14px 18px; font-size:13.5px; margin-bottom:18px; border:1px solid;
   }
-  .callout.warn{background:#FFF8E1; border-color:#F0C94A; color:#6B5300;}
-  .callout.info{background:#EAF2FE; border-color:#B9D3FA; color:#123A6B;}
+  .callout.warn{background:#FBF1DE; border-color:var(--gold-light); color:#6B4F1D;}
+  .callout.info{background:#E7F2F4; border-color:#9CC9D4; color:var(--navy);}
   .callout b{font-weight:700;}
 
-  .kpi-grid{display:grid; grid-template-columns:repeat(auto-fit, minmax(190px,1fr)); gap:14px;}
+  .kpi-grid{display:grid; grid-template-columns:repeat(3, 1fr); gap:14px;}
+  @media(max-width:900px){.kpi-grid{grid-template-columns:repeat(2, 1fr);}}
+  @media(max-width:560px){.kpi-grid{grid-template-columns:1fr;}}
   .kpi{
     background:var(--card); border:1px solid var(--border); border-radius:14px; padding:18px 20px;
     position:relative; overflow:hidden; border-top:3px solid var(--gold-light);
@@ -74,7 +76,7 @@
   th, td{padding:9px 10px; border-bottom:1px solid var(--border); text-align:right;}
   th:first-child, td:first-child{text-align:left;}
   th{background:var(--navy); color:#fff; font-weight:600; font-size:12px; text-transform:uppercase; letter-spacing:.04em;}
-  tbody tr:nth-child(even){background:#FAFBFC;}
+  tbody tr:nth-child(even){background:#F1F6F6;}
   .table-wrap{overflow-x:auto; border-radius:10px; border:1px solid var(--border);}
   td.pos{color:var(--green); font-weight:700;}
   td.neg{color:var(--red); font-weight:700;}
@@ -86,7 +88,7 @@
   .two-col{display:grid; grid-template-columns:1.15fr .85fr; gap:18px;}
   @media(max-width:900px){.two-col{grid-template-columns:1fr;}}
 
-  .chart-card{background:var(--card); border:1px solid var(--border); border-radius:14px; padding:18px 20px 10px;}
+  .chart-card{background:var(--card); border:1px solid var(--border); border-top:3px solid var(--gold-light); border-radius:14px; padding:18px 20px 10px;}
   .chart-card h4{margin:0 0 12px; font-size:14px; font-weight:700; color:var(--navy);}
   canvas{max-width:100%;}
 
@@ -103,12 +105,13 @@
 
   .badge{display:inline-block; font-size:10.5px; font-weight:700; padding:2px 7px; border-radius:10px; margin-left:6px; vertical-align:middle;}
   .badge.new{background:var(--gold); color:#fff;}
-  .badge.test{background:#EEE; color:#555;}
+  .badge.test{background:#E4EDEF; color:var(--navy);}
 
   .grid-charts{display:grid; grid-template-columns:1fr 1fr; gap:16px;}
   @media(max-width:900px){.grid-charts{grid-template-columns:1fr;}}
 
-  footer{margin-top:50px; padding:26px 0; border-top:2px solid var(--gold-light); font-size:12px; color:var(--gray); text-align:center;}
+  footer{margin-top:50px; padding:28px 24px; background:var(--navy); color:#DCEEF2; border-radius:14px; border-top:4px solid var(--gold); font-size:12px; text-align:center;}
+  footer b{color:var(--gold-light);}
   .small{font-size:11.5px; color:var(--gray);}
   .center{text-align:center;}
 </style>
@@ -170,17 +173,19 @@
 
   <div class="section">
     <h2>3. Sesiones, vistas y reservas reales en el tiempo</h2>
-    <div class="chart-card">
-      <h4>Sesiones GA4 vs. Vistas de página &mdash; línea vertical marca el lanzamiento (23 jun)</h4>
-      <canvas id="chartSessionsViews" height="260"></canvas>
-    </div>
-    <div class="chart-card" style="margin-top:16px;">
-      <h4>Reservas reales (Ok) e Income real (USD) por día &mdash; archivo de reservas, solo Royalton</h4>
-      <canvas id="chartBookingsIncome" height="260"></canvas>
+    <div class="grid-charts">
+      <div class="chart-card">
+        <h4>Sesiones GA4 vs. Vistas de página &mdash; línea vertical marca el lanzamiento (23 jun)</h4>
+        <canvas id="chartSessionsViews" height="170"></canvas>
+      </div>
+      <div class="chart-card">
+        <h4>Reservas reales (Ok) e Income real (USD) por día &mdash; archivo de reservas, solo Royalton</h4>
+        <canvas id="chartBookingsIncome" height="170"></canvas>
+      </div>
     </div>
     <div class="chart-card" style="margin-top:16px;">
       <h4>Conversión real (Sesiones GA4 → Reserva Ok real) % por día</h4>
-      <canvas id="chartCVR" height="220"></canvas>
+      <canvas id="chartCVR" height="150"></canvas>
     </div>
   </div>
 
