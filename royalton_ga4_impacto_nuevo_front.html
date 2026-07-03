@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Royalton GA4 &mdash; Impacto del nuevo front (23 jun 2026)</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+  :root{
+    --orange:#F26522;
+    --coral:#E84B2A;
+    --navy:#182B4A;
+    --navy-light:#25406A;
+    --bg:#F5F6FA;
+    --card:#FFFFFF;
+    --green:#1E8E5A;
+    --green-bg:#E9F7F0;
+    --red:#C0392B;
+    --red-bg:#FDECEA;
+    --yellow-bg:#FFF3B0;
+    --yellow-border:#E8B800;
+    --gray:#6B7280;
+    --border:#E5E7EB;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; font-family:'Segoe UI', Roboto, Arial, sans-serif; background:var(--bg); color:#1F2937;
+    line-height:1.5;
+  }
+  .wrap{max-width:1180px; margin:0 auto; padding:0 20px 60px;}
+  header.hero{
+    background:linear-gradient(120deg, var(--navy) 0%, var(--navy-light) 60%, var(--coral) 160%);
+    color:#fff; padding:38px 0 30px;
+  }
+  header.hero .wrap{display:flex; flex-direction:column; gap:6px;}
+  header.hero .tag{
+    display:inline-block; background:var(--orange); color:#fff; font-size:12px; font-weight:700;
+    letter-spacing:.04em; text-transform:uppercase; padding:4px 10px; border-radius:20px; width:max-content; margin-bottom:8px;
+  }
+  header.hero h1{margin:0; font-size:28px; font-weight:700;}
+  header.hero p.sub{margin:4px 0 0; font-size:14.5px; color:#DCE3F0; max-width:820px;}
+  header.hero .meta{display:flex; gap:22px; margin-top:16px; flex-wrap:wrap; font-size:13px; color:#EAF0FB;}
+  header.hero .meta b{color:#fff;}
+
+  .section{margin-top:34px;}
+  .section h2{
+    font-size:19px; color:var(--navy); border-left:5px solid var(--orange); padding-left:10px; margin:0 0 14px;
+  }
+  .section h3{font-size:15px; color:var(--navy-light); margin:22px 0 10px;}
+  .card{background:var(--card); border:1px solid var(--border); border-radius:12px; padding:18px 20px; box-shadow:0 1px 2px rgba(16,24,40,.04);}
+
+  .callout{
+    border-radius:10px; padding:14px 18px; font-size:13.5px; margin-bottom:18px; border:1px solid;
+  }
+  .callout.warn{background:#FFF8E1; border-color:#F0C94A; color:#6B5300;}
+  .callout.info{background:#EAF2FE; border-color:#B9D3FA; color:#123A6B;}
+  .callout b{font-weight:700;}
+
+  .kpi-grid{display:grid; grid-template-columns:repeat(auto-fit, minmax(190px,1fr)); gap:14px;}
+  .kpi{
+    background:var(--card); border:1px solid var(--border); border-radius:12px; padding:16px 18px;
+    position:relative; overflow:hidden;
+  }
+  .kpi .label{font-size:12px; color:var(--gray); text-transform:uppercase; letter-spacing:.03em; font-weight:600;}
+  .kpi .value{font-size:24px; font-weight:800; color:var(--navy); margin-top:4px;}
+  .kpi .delta{font-size:12.5px; margin-top:6px; font-weight:700;}
+  .kpi .delta.up{color:var(--green);}
+  .kpi .delta.down{color:var(--red);}
+  .kpi .context{font-size:11.5px; color:var(--gray); margin-top:2px;}
+
+  table{width:100%; border-collapse:collapse; font-size:13px; background:var(--card);}
+  th, td{padding:9px 10px; border-bottom:1px solid var(--border); text-align:right;}
+  th:first-child, td:first-child{text-align:left;}
+  th{background:var(--navy); color:#fff; font-weight:600; font-size:12px; text-transform:uppercase; letter-spacing:.02em;}
+  tbody tr:nth-child(even){background:#FAFBFC;}
+  .table-wrap{overflow-x:auto; border-radius:10px; border:1px solid var(--border);}
+  td.pos{color:var(--green); font-weight:700;}
+  td.neg{color:var(--red); font-weight:700;}
+  tr.bottleneck td{background:var(--yellow-bg) !important; font-weight:700; border-top:2px solid var(--yellow-border); border-bottom:2px solid var(--yellow-border);}
+
+  .funnel-cols{display:grid; grid-template-columns:1fr 1fr; gap:18px;}
+  @media(max-width:820px){.funnel-cols{grid-template-columns:1fr;}}
+
+  .two-col{display:grid; grid-template-columns:1.15fr .85fr; gap:18px;}
+  @media(max-width:900px){.two-col{grid-template-columns:1fr;}}
+
+  .chart-card{background:var(--card); border:1px solid var(--border); border-radius:12px; padding:16px 18px 8px;}
+  .chart-card h4{margin:0 0 10px; font-size:13.5px; color:var(--navy);}
+  canvas{max-width:100%;}
+
+  .concl-grid{display:grid; grid-template-columns:1fr 1fr; gap:18px;}
+  @media(max-width:820px){.concl-grid{grid-template-columns:1fr;}}
+  .concl-box{border-radius:12px; padding:18px 20px;}
+  .concl-box.red{background:var(--red-bg); border:1px solid #F3B7AF;}
+  .concl-box.green{background:var(--green-bg); border:1px solid #A7DFC3;}
+  .concl-box h3{margin:0 0 10px; font-size:14.5px;}
+  .concl-box.red h3{color:var(--red);}
+  .concl-box.green h3{color:var(--green);}
+  .concl-box ul{margin:0; padding-left:18px;}
+  .concl-box li{margin-bottom:9px; font-size:13px;}
+
+  .badge{display:inline-block; font-size:10.5px; font-weight:700; padding:2px 7px; border-radius:10px; margin-left:6px; vertical-align:middle;}
+  .badge.new{background:var(--orange); color:#fff;}
+  .badge.test{background:#EEE; color:#555;}
+
+  .grid-charts{display:grid; grid-template-columns:1fr 1fr; gap:16px;}
+  @media(max-width:900px){.grid-charts{grid-template-columns:1fr;}}
+
+  footer{margin-top:50px; padding:26px 0; border-top:1px solid var(--border); font-size:12px; color:var(--gray); text-align:center;}
+  .small{font-size:11.5px; color:var(--gray);}
+  .center{text-align:center;}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <span class="tag">GA4 &middot; Royalton Hotels (WHL) &middot; NexusTours</span>
+    <h1>Impacto del nuevo front de Royalton en GA4 y en reservas reales</h1>
+    <p class="sub">Análisis comparativo del tráfico, embudo de conversión y reservas de la agencia <b>Royalton Hotels (WHL / WHL Opaco)</b> antes y después del lanzamiento del nuevo front el <b>23 de junio de 2026</b>. Cruce entre GA4 (propiedad 378102110) y el sistema de reservas real de la intranet.</p>
+    <div class="meta">
+      <div>📅 Periodo analizado: <b>1 jun &ndash; 2 jul 2026</b></div>
+      <div>🚀 Lanzamiento del nuevo front: <b>23 jun 2026</b></div>
+      <div>🕐 Zona horaria: <b>America/Cancún</b></div>
+      <div>🔄 Generado: <b>3 jul 2026</b></div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="section">
+    <div class="callout info">
+      <b>ℹ️ Nota:</b> el dato de ~$37K del 2 de julio mencionado en la primera versión de este reporte correspondía al total general (todas las agencias), no solo a Royalton — queda resuelto, sin acción pendiente.
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>1. Resumen ejecutivo &mdash; Pre vs Post lanzamiento</h2>
+    <p class="small">Promedios por día. <b>Pre-lanzamiento</b>: 1&ndash;22 jun (22 días). <b>Post-lanzamiento estabilizado</b>: 28 jun&ndash;2 jul (5 días, excluyendo la semana de disrupción del lanzamiento). Ver sección 4 para el detalle de la semana de disrupción (23&ndash;27 jun).</p>
+    <div class="kpi-grid">
+      <div class="kpi"><div class="label">Sesiones GA4 / día</div><div class="value">1,378</div><div class="delta up">▲ 7.1% vs pre-lanzamiento</div><div class="context">Pre: 1,287 prom/día</div></div>
+<div class="kpi"><div class="label">Vistas / día</div><div class="value">7,651</div><div class="delta up">▲ 81.7% vs pre-lanzamiento</div><div class="context">Pre: 4,210 prom/día</div></div>
+<div class="kpi"><div class="label">Reservas Ok reales / día</div><div class="value">57</div><div class="delta up">▲ 55.2% vs pre-lanzamiento</div><div class="context">Pre: 37 prom/día</div></div>
+<div class="kpi"><div class="label">Income real / día</div><div class="value">$8,277</div><div class="delta up">▲ 86.2% vs pre-lanzamiento</div><div class="context">Pre: $4,444 USD, prom/día</div></div>
+<div class="kpi"><div class="label">CVR real (Sesión→Reserva)</div><div class="value">4.12%</div><div class="delta up">▲ 43.6% vs pre-lanzamiento</div><div class="context">Pre: 2.87% %</div></div>
+<div class="kpi"><div class="label">Margen bruto</div><div class="value">45.69%</div><div class="delta up">▲ 20.5% vs pre-lanzamiento</div><div class="context">Pre: 37.93% %</div></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>2. Ayer vs. mismo día de la semana pasada <span class="badge new">Actualizar diario</span></h2>
+    <p class="small">Comparación entre <b>jueves 2 de julio</b> (ayer) y <b>jueves 25 de junio</b> (mismo día, semana anterior). Esta sección está pensada para revisarse cada mañana; ver nota al final del reporte sobre cómo mantenerla al día.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Métrica</th><th>Jue 25 jun (semana pasada)</th><th>Jue 2 jul (ayer)</th><th>Variación</th></tr></thead>
+        <tbody>
+          <tr><td>Sesiones GA4</td><td>1,311</td><td>1,376</td><td class="pos">+5.0%</td></tr>
+<tr><td>Vistas de página</td><td>8,552</td><td>7,944</td><td class="neg">-7.1%</td></tr>
+<tr><td>Reservas Ok reales</td><td>24</td><td>69</td><td class="pos">+187.5%</td></tr>
+<tr><td>Income real (USD)</td><td>$2,632.75</td><td>$8,515.50</td><td class="pos">+223.4%</td></tr>
+<tr><td>CVR real (Sesión→Reserva)</td><td>1.83%</td><td>5.01%</td><td class="pos">+173.8%</td></tr>
+<tr><td>Purchases GA4 (evento)</td><td>21</td><td>69</td><td class="pos">+228.6%</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>3. Sesiones, vistas y reservas reales en el tiempo</h2>
+    <div class="chart-card">
+      <h4>Sesiones GA4 vs. Vistas de página &mdash; línea vertical marca el lanzamiento (23 jun)</h4>
+      <canvas id="chartSessionsViews" height="90"></canvas>
+    </div>
+    <div class="chart-card" style="margin-top:16px;">
+      <h4>Reservas reales (Ok) e Income real (USD) por día &mdash; archivo de reservas, solo Royalton</h4>
+      <canvas id="chartBookingsIncome" height="90"></canvas>
+    </div>
+    <div class="chart-card" style="margin-top:16px;">
+      <h4>Conversión real (Sesiones GA4 → Reserva Ok real) % por día</h4>
+      <canvas id="chartCVR" height="80"></canvas>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>4. Embudo GA4: Pre vs. Post lanzamiento</h2>
+    <p class="small">Eventos absolutos promedio/día y % sobre sesiones y sobre el paso anterior. El paso resaltado en <b>amarillo</b> es el cuello de botella identificado.</p>
+    <div class="funnel-cols">
+      <div>
+        <h3>Pre-lanzamiento (1&ndash;22 jun, promedio/día)</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Paso</th><th>Eventos/día</th><th>% s/ sesiones</th><th>% s/ paso anterior</th></tr></thead>
+            <tbody>
+              <tr><td>Sesiones</td><td>1,287.3</td><td>100.0%</td><td>100.0%</td></tr>
+<tr><td>view_item</td><td>167.1</td><td>13.0%</td><td>13.0%</td></tr>
+<tr><td>add_to_cart</td><td>82.2</td><td>6.4%</td><td>49.2%</td></tr>
+<tr><td>purchase (GA4)</td><td>25.7</td><td>2.0%</td><td>31.3%</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div>
+        <h3>Post-lanzamiento (23 jun&ndash;2 jul, promedio/día)</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Paso</th><th>Eventos/día</th><th>% s/ sesiones</th><th>% s/ paso anterior</th></tr></thead>
+            <tbody>
+              <tr><td>Sesiones</td><td>1,506.5</td><td>100.0%</td><td>100.0%</td></tr>
+<tr><td>view_item</td><td>1,626.7</td><td>108.0%</td><td>108.0%</td></tr>
+<tr><td>begin_checkout</td><td>257.8</td><td>17.1%</td><td>15.8%</td></tr>
+<tr><td>checkout_step_complete</td><td>230.8</td><td>15.3%</td><td>89.5%</td></tr>
+<tr class="bottleneck"><td>purchase (GA4)</td><td>45.6</td><td>3.0%</td><td>19.8%</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="callout warn" style="margin-top:16px;">
+      <b>🟡 Cuello de botella identificado:</b> Post-lanzamiento, de cada 100 sesiones que llegan a <b>checkout_step_complete</b>, solo ~20 generan un evento <b>purchase</b> en GA4 (19.8%), frente a ~31% de conversión add_to_cart→purchase que existía antes del lanzamiento. Es la caída más grande de todo el embudo nuevo. Puede deberse a (a) fricción real en el último paso de pago, o (b) que "checkout_step_complete" se dispara antes de que el pago se confirme (definición del tag). Recomiendo validar con el equipo de producto/tag manager cuál de las dos causas es la real, ya que las implicancias de negocio son muy distintas.
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>5. Tabla de reservas &mdash; todas las métricas comparadas</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Métrica</th><th>Pre-lanzamiento<br>(1&ndash;22 jun, prom/día)</th><th>Semana de disrupción<br>(23&ndash;27 jun, prom/día)</th><th>Post estabilizado<br>(28 jun&ndash;2 jul, prom/día)</th><th>Var. Estabilizado vs Pre</th></tr></thead>
+        <tbody>
+          <tr><td>Reservas Ok reales /día</td><td>36.6</td><td>23.4</td><td>56.8</td><td class="pos">+55.2%</td></tr>
+<tr><td>Income real /día (USD)</td><td>$4,444.10</td><td>$2,971.30</td><td>$8,276.90</td><td class="pos">+86.2%</td></tr>
+<tr><td>Ticket promedio (AOV, USD)</td><td>$121.50</td><td>$127.00</td><td>$145.80</td><td class="pos">+20.0%</td></tr>
+<tr><td>Margen bruto %</td><td>37.93%</td><td>44.76%</td><td>45.69%</td><td class="pos">+20.5%</td></tr>
+<tr><td>CVR real (Sesión→Reserva) %</td><td>2.87%</td><td>1.52%</td><td>4.12%</td><td class="pos">+43.6%</td></tr>
+<tr><td>Canceladas /día</td><td>17.2</td><td>17.4</td><td>15.2</td><td class="pos">-11.6%</td></tr>
+<tr><td>Bookings de prueba (test) /día</td><td>0.5</td><td>13.2</td><td>9.8</td><td class="neg">+1860.0%</td></tr>
+<tr><td>Reservas sin email /día</td><td>67.0</td><td>29.4</td><td>24.4</td><td class="pos">-63.6%</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>6. Tráfico por canal</h2>
+    <div class="callout info">
+      <b>ℹ️ Metodología:</b> la agrupación de canales <b>por defecto</b> de GA4 no refleja cómo está configurada la cuenta (mostraba una porción enorme como "Unassigned", incluyendo casi toda la app de Royalton). Este reporte reclasifica cada sesión con las <b>reglas de canal personalizado</b> que definieron en GA4 (Referral, Organic Search, RY_App, Paid Social, Display Ads, Email Ad-hoc, Digital Signage, Direct, Paid Search, Push Notifications, Mensajería automática), aplicadas sobre fuente/medio/campaña de cada sesión. No tengo el orden exacto de prioridad configurado en GA4 (varios canales comparten condiciones, ej. RY_App y Push Notifications), así que usé el orden más consistente con las exclusiones que ya traen sus propias reglas; si me confirman el orden real de la lista de canales en GA4 puedo ajustar el detalle fino.
+    </div>
+    <p class="small">Sesiones diarias por canal (clasificación personalizada). Línea vertical marca el lanzamiento del nuevo front (23 jun).</p>
+    <div class="grid-charts">
+      <div class="chart-card"><h4>Direct</h4><canvas id="chChannel0" height="140"></canvas></div>
+      <div class="chart-card"><h4>Referral</h4><canvas id="chChannel1" height="140"></canvas></div>
+      <div class="chart-card"><h4>RY_App</h4><canvas id="chChannel2" height="140"></canvas></div>
+      <div class="chart-card"><h4>Mensajería automática</h4><canvas id="chChannel3" height="140"></canvas></div>
+      <div class="chart-card"><h4>Paid Search</h4><canvas id="chChannel4" height="140"></canvas></div>
+      <div class="chart-card"><h4>Digital Signage</h4><canvas id="chChannel5" height="140"></canvas></div>
+    </div>
+    <div class="table-wrap" style="margin-top:16px;">
+      <table>
+        <thead><tr><th>Canal</th><th>Sesiones/día (pre)</th><th>Sesiones/día (post)</th><th>Variación</th></tr></thead>
+        <tbody>
+          <tr><td>Direct</td><td>389.3</td><td>547.4</td><td class="pos">+40.6%</td></tr>
+<tr><td>Referral</td><td>359.3</td><td>411.8</td><td class="pos">+14.6%</td></tr>
+<tr><td>RY_App</td><td>347.3</td><td>301.1</td><td class="neg">-13.3%</td></tr>
+<tr><td>Mensajería automática</td><td>0.4</td><td>124.0</td><td class="pos">n/a (base casi nula)</td></tr>
+<tr><td>Paid Search</td><td>181.4</td><td>114.4</td><td class="neg">-36.9%</td></tr>
+<tr><td>Digital Signage</td><td>6.2</td><td>4.4</td><td class="neg">-29.0%</td></tr>
+<tr><td>Organic Social</td><td>1.0</td><td>1.8</td><td class="pos">+80.0%</td></tr>
+<tr><td>Organic Search</td><td>0.6</td><td>0.8</td><td class="pos">n/a (base casi nula)</td></tr>
+<tr><td>Push Notifications</td><td>2.0</td><td>0.4</td><td class="neg">-80.0%</td></tr>
+<tr><td>Paid Social</td><td>0.1</td><td>0.0</td><td class="">n/a (base casi nula)</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>7. Conversión por tipo de producto (post-lanzamiento)</h2>
+    <p class="small">Categorías de producto (item category) tal como llegan en GA4 desde el 23 de junio. "Actividades" y "Tours" son categorías completamente nuevas: no existían antes del nuevo front.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Categoría</th><th>Agregados al carrito</th><th>Unidades compradas</th><th>Ingreso (USD)</th><th>Conversión carrito→compra</th></tr></thead>
+        <tbody>
+          <tr><td>Transfers</td><td>250</td><td>154</td><td>$13,455.07</td><td class="pos">61.6%</td></tr>
+<tr><td>Actividades <span class="badge new">Nuevo</span></td><td>526</td><td>100</td><td>$37,463.92</td><td class="neg">19.0%</td></tr>
+<tr><td>Private</td><td>168</td><td>59</td><td>$6,498.82</td><td class="">35.1%</td></tr>
+<tr><td>Shared</td><td>89</td><td>33</td><td>$2,019.47</td><td class="">37.1%</td></tr>
+<tr><td>Deluxe</td><td>15</td><td>2</td><td>$417.11</td><td class="neg">13.3%</td></tr>
+<tr><td>Tours <span class="badge new">Nuevo</span></td><td>66</td><td>0</td><td>$0.00</td><td class="neg">0.0%</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="small" style="margin-top:8px;">*Se excluyó del ingreso de "Actividades" un registro atípico de $74,700 el 26 de junio (ver sección de calidad de datos) por ser incompatible con el ingreso real de reservas de ese día (~$3,594 total). La conversión carrito→compra no se ve afectada por esta exclusión.</p>
+  </div>
+
+  <div class="section">
+    <h2>8. Destinos activos</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Destino (Delegación)</th><th>Reservas pre-lanzamiento</th><th>Reservas post-lanzamiento</th><th></th></tr></thead>
+        <tbody>
+          <tr><td>MX Cancún y Riviera Maya</td><td>734</td><td>440</td><td></td></tr>
+<tr><td>DO Punta Cana</td><td>135</td><td>86</td><td></td></tr>
+<tr><td>LC Santa Lucía</td><td>173</td><td>67</td><td></td></tr>
+<tr><td>AG Antigua</td><td>111</td><td>45</td><td></td></tr>
+<tr><td>BR Barbados</td><td>41</td><td>32</td><td></td></tr>
+<tr><td>GD Granada</td><td>31</td><td>29</td><td></td></tr>
+<tr><td>JM Jamaica</td><td>7</td><td>4</td><td></td></tr>
+<tr><td>BS Bahamas</td><td>6</td><td>0</td><td></td></tr>
+<tr><td>CR Costa Rica</td><td>1</td><td>0</td><td></td></tr>
+<tr><td>General (sin destino asignado)</td><td>200</td><td>41</td><td></td></tr>
+<tr><td>General Test (QA/pruebas)</td><td>0</td><td>15</td><td> <span class="badge test">Solo aparece post-lanzamiento (QA)</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="small" style="margin-top:8px;">No se detectaron países/destinos geográficos nuevos en el nuevo front: los 7 destinos activos (México/Cancún, Punta Cana, Santa Lucía, Antigua, Barbados, Granada, Jamaica) ya existían antes. Lo que sí es nuevo son las <b>categorías de producto</b> dentro de esos destinos (Actividades, Tours) &mdash; ver sección 7.</p>
+  </div>
+
+  <div class="section">
+    <h2>9. Eventos nuevos en GA4 (desde el 23 de junio)</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th style="text-align:left;">Evento</th><th style="text-align:left;">Qué mide</th></tr></thead>
+        <tbody>
+          <tr><td style="text-align:left;"><code>view_item_list</code></td><td style="text-align:left;">Un usuario vio una lista/grid de resultados (búsqueda o catálogo de tours/transfers/actividades).</td></tr>
+<tr><td style="text-align:left;"><code>select_item</code></td><td style="text-align:left;">El usuario hizo clic en un ítem específico dentro de una lista de resultados.</td></tr>
+<tr><td style="text-align:left;"><code>begin_checkout</code></td><td style="text-align:left;">El usuario inició el proceso de checkout/pago.</td></tr>
+<tr><td style="text-align:left;"><code>checkout_progress</code></td><td style="text-align:left;">Evento personalizado que registra avance dentro de los pasos del checkout.</td></tr>
+<tr><td style="text-align:left;"><code>checkout_step_complete</code></td><td style="text-align:left;">Evento personalizado que marca la finalización de un paso del checkout.</td></tr>
+<tr><td style="text-align:left;"><code>add_shipping_info</code></td><td style="text-align:left;">El usuario completó datos de entrega/traslado durante el checkout.</td></tr>
+<tr><td style="text-align:left;"><code>add_payment_info</code></td><td style="text-align:left;">El usuario ingresó datos de pago durante el checkout.</td></tr>
+<tr><td style="text-align:left;"><code>search_flight</code></td><td style="text-align:left;">El usuario realizó una búsqueda de vuelo (nuevo widget de búsqueda de vuelos).</td></tr>
+<tr><td style="text-align:left;"><code>flight_found / flight_not_found</code></td><td style="text-align:left;">La búsqueda de vuelo devolvió (o no) resultados.</td></tr>
+<tr><td style="text-align:left;"><code>selected_flight</code></td><td style="text-align:left;">El usuario seleccionó un vuelo específico de los resultados.</td></tr>
+<tr><td style="text-align:left;"><code>select_trip_type</code></td><td style="text-align:left;">El usuario eligió el tipo de viaje (solo ida / redondo) en el buscador.</td></tr>
+<tr><td style="text-align:left;"><code>transfer_search</code></td><td style="text-align:left;">El usuario realizó una búsqueda de transfer.</td></tr>
+<tr><td style="text-align:left;"><code>select_content</code></td><td style="text-align:left;">Evento estándar de GA4: el usuario seleccionó contenido promocionado/destacado.</td></tr>
+<tr><td style="text-align:left;"><code>promo_code_applied / promo_code_error</code></td><td style="text-align:left;">El usuario aplicó un código de descuento, con éxito o con error.</td></tr>
+<tr><td style="text-align:left;"><code>payment_error</code></td><td style="text-align:left;">Ocurrió un error durante el intento de pago.</td></tr>
+<tr><td style="text-align:left;"><code>language_change</code></td><td style="text-align:left;">El usuario cambió el idioma del sitio.</td></tr>
+<tr><td style="text-align:left;"><code>no_results_found</code></td><td style="text-align:left;">Una búsqueda (general) no devolvió resultados.</td></tr>
+<tr><td style="text-align:left;"><code>file_download</code></td><td style="text-align:left;">El usuario descargó un archivo (ej. voucher/itinerario).</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout info" style="margin-top:14px;">
+      <b>ℹ️ Eventos que dejaron de dispararse:</b> <code>tipo_de_usuario</code> (pasó de ~3,900&ndash;5,700 eventos/día a &lt;30/día desde el 24 jun), <code>form_start</code>, <code>form_submit</code>, <code>internal_link_click</code>, <code>click_tour_card</code>, <code>no_search_result</code> y <code>OutboundLink_GA4</code> prácticamente desaparecieron tras el lanzamiento. Si alguno de estos alimentaba audiencias, personalización o reportes existentes, hay que revisar si el tag de GTM se migró al nuevo front.
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>10. Conclusiones</h2>
+    <div class="concl-grid">
+      <div class="concl-box red">
+        <h3>🔴 Atención inmediata</h3>
+        <ul>
+          <li><b>Bug de ingresos en GA4 (23&ndash;27 jun):</b> purchaseRevenue aparece en $0 el 24 y 25 de junio pese a 26 y 21 compras registradas ese día &mdash; durante la semana de lanzamiento, cualquier reporte de ingresos leído directo de GA4 habría subestimado la venta real.</li>
+<li><b>Pico anómalo de ingreso el 26 de junio:</b> GA4 muestra $833,358 de purchaseRevenue total (y $74,700 solo en la categoría "Actividades"), frente a los ~$3,594 reales de ese día según el archivo de reservas. Es ~230x el valor real: parece un error de registro (posible decimal, moneda o reserva de prueba) que hay que corregir antes de usar ese dato para ROAS o reportes mensuales.</li>
+<li><b>Bookings de prueba contaminando datos reales:</b> las reservas marcadas como test (delegación "General Test" o titulares tipo "TEST") pasaron de 0.8% antes del lanzamiento a 15.2% después (hasta 21 en un solo día), y al menos 3 llegaron a estado "Ok" (pagado) por $197 en total. Se recomienda excluir "General Test" de todo reporte comercial.</li>
+<li><b>Cuello de botella en el último paso del checkout:</b> solo 19.8% de las sesiones que llegan a checkout_step_complete generan un purchase en GA4 post-lanzamiento (vs. ~31% add_to_cart→purchase antes). Hay que confirmar si es fricción real de pago o un tema de definición del tag.</li>
+<li><b>Evento tipo_de_usuario roto:</b> pasó de ~3,900&ndash;5,700 eventos/día a menos de 30/día desde el 24 de junio &mdash; si alimentaba segmentación o reportes, dejó de hacerlo.</li>
+<li><b>Categoría "Tours" sin conversión:</b> 66 productos agregados al carrito, 0 compras confirmadas en la ventana analizada.</li>
+<li><b>Taxonomía de producto inconsistente:</b> los transfers aparecen algunos días como "Transfers" y otros divididos en "Private"/"Shared"/"Deluxe", lo que complica un reporte limpio por categoría.</li>
+<li><b>Paid Search cayó -36.9%</b> en sesiones/día tras el lanzamiento (181.4 → 114.4/día) — vale la pena revisar si las campañas activas siguen apuntando a URLs/landing pages válidas del nuevo front.</li>
+<li><b>Tráfico de la app (RY_App) bajó -13.3%</b> en sesiones/día post-lanzamiento — si el nuevo front cambió deep links o el flujo de apertura desde la app, podría estar perdiendo parte de ese tráfico.</li>
+        </ul>
+      </div>
+      <div class="concl-box green">
+        <h3>🟢 Señales positivas</h3>
+        <ul>
+          <li><b>Recuperación fuerte de reservas e ingreso:</b> en la ventana estabilizada (28 jun&ndash;2 jul) el promedio es de 56.8 reservas/día y $8,277/día, vs. 36.6 reservas/día y $4,444/día antes del lanzamiento &mdash; +55% en volumen y +86% en ingreso.</li>
+<li><b>Mejor conversión real:</b> el CVR real (sesión→reserva Ok) subió de 2.87% pre-lanzamiento a 4.12% en la ventana estabilizada, con un pico de 5.01% el 2 de julio &mdash; el mejor día de todo el periodo analizado.</li>
+<li><b>Mucha mejor captura de contacto del cliente:</b> las reservas sin email registrado bajaron de 99.9% antes del lanzamiento (limitación del sistema anterior) a 35.4% después.</li>
+<li><b>Margen se mantiene y mejora:</b> ~37.9% antes del lanzamiento vs. ~45.7% en la ventana estabilizada.</li>
+<li><b>El tracking de compras en GA4 ya cuadra con la realidad:</b> el 2 de julio, GA4 registra 69 purchases y el archivo de reservas registra 69 reservas Ok &mdash; el hueco de tracking de la primera semana ya se cerró.</li>
+<li><b>Catálogo más amplio sin perder sesiones:</b> las vistas de página/ítem casi se duplicaron (+82% en la ventana estabilizada) gracias a Actividades y Tours, mientras las sesiones se mantuvieron e incluso subieron levemente (+7%).</li>
+<li><b>Direct y Referral crecieron con fuerza</b> (+40.6% y +14.6% respectivamente en sesiones/día) tras el lanzamiento &mdash; señal temprana positiva, a confirmar con más semanas de datos.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <p><b>Cómo mantener la sección "Ayer vs. semana pasada" al día:</b> este es un archivo estático (HTML) para GitHub Pages, por lo que no puede conectarse en vivo a GA4 ni al archivo de reservas por sí solo. Para actualizarla a diario tienes dos caminos: (1) pedirme cada mañana que regenere este bloque con el día anterior y el archivo de reservas más reciente y lo subes de nuevo, o (2) si quieres algo que se actualice solo al abrirlo (sin subir nada), puedo montarte un dashboard vivo en Supermetrics Studio que reconsulta GA4 cada vez que lo abres — puedo prepararlo si te sirve. Todas las cifras de este reporte usan zona horaria America/Cancún y fueron generadas el 3 de julio de 2026 con datos hasta el 2 de julio.</p>
+  </footer>
+
+</div>
+
+<script>
+const DATES = ["2026-06-01", "2026-06-02", "2026-06-03", "2026-06-04", "2026-06-05", "2026-06-06", "2026-06-07", "2026-06-08", "2026-06-09", "2026-06-10", "2026-06-11", "2026-06-12", "2026-06-13", "2026-06-14", "2026-06-15", "2026-06-16", "2026-06-17", "2026-06-18", "2026-06-19", "2026-06-20", "2026-06-21", "2026-06-22", "2026-06-23", "2026-06-24", "2026-06-25", "2026-06-26", "2026-06-27", "2026-06-28", "2026-06-29", "2026-06-30", "2026-07-01", "2026-07-02"];
+const SESSIONS = [1148, 1080, 1210, 1396, 1166, 953, 1184, 1276, 1270, 1115, 1300, 1087, 1133, 1326, 1328, 1832, 1371, 1399, 1296, 1369, 1514, 1567, 1454, 1345, 1311, 2765, 1298, 1392, 1434, 1344, 1346, 1376];
+const VIEWS = [3974, 4368, 4596, 4398, 4010, 2828, 3992, 3989, 4063, 3700, 3970, 3533, 3625, 3785, 4338, 6514, 4886, 4629, 4241, 3947, 4093, 5141, 8846, 7653, 8552, 9552, 6313, 7841, 7343, 7172, 7957, 7944];
+const OKCOUNT = [43.0, 43.0, 42.0, 30.0, 36.0, 22.0, 34.0, 47.0, 39.0, 30.0, 28.0, 32.0, 32.0, 39.0, 35.0, 50.0, 38.0, 49.0, 38.0, 33.0, 30.0, 35.0, 14.0, 27.0, 24.0, 29.0, 23.0, 48.0, 61.0, 58.0, 48.0, 69.0];
+const OKINCOME = [5242.88, 6152.25, 5271.3, 2589.5, 3274.21, 2606.62, 3229.99, 5910.19, 6011.15, 3446.08, 2150.97, 3345.99, 3654.71, 5636.48, 4537.71, 5025.63, 4752.9, 5752.88, 4307.46, 4784.72, 4298.54, 5788.01, 1758.5, 4529.13, 2632.75, 3593.72, 2342.35, 7393.85, 8961.75, 10573.3, 5940.16, 8515.5];
+const CVR = [3.746, 3.981, 3.471, 2.149, 3.087, 2.308, 2.872, 3.683, 3.071, 2.691, 2.154, 2.944, 2.824, 2.941, 2.636, 2.729, 2.772, 3.503, 2.932, 2.411, 1.982, 2.234, 0.963, 2.007, 1.831, 1.049, 1.772, 3.448, 4.254, 4.315, 3.566, 5.015];
+const LAUNCH_IDX = DATES.indexOf('2026-06-23');
+
+const NAVY = '#182B4A';
+const ORANGE = '#F26522';
+const CORAL = '#E84B2A';
+const GRAY = '#9CA3AF';
+
+function launchLinePlugin(){
+  return {
+    id: 'launchLine',
+    afterDraw(chart){
+      if(LAUNCH_IDX < 0) return;
+      const xScale = chart.scales.x;
+      const yScale = chart.scales.y;
+      const x = xScale.getPixelForValue(LAUNCH_IDX);
+      const ctx = chart.ctx;
+      ctx.save();
+      ctx.beginPath();
+      ctx.strokeStyle = '#C0392B';
+      ctx.setLineDash([5,4]);
+      ctx.lineWidth = 1.5;
+      ctx.moveTo(x, yScale.top);
+      ctx.lineTo(x, yScale.bottom);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = '#C0392B';
+      ctx.font = '11px sans-serif';
+      ctx.fillText('Lanzamiento 23 jun', x+4, yScale.top+12);
+      ctx.restore();
+    }
+  };
+}
+
+new Chart(document.getElementById('chartSessionsViews'), {
+  type:'line',
+  data:{labels:DATES, datasets:[
+    {label:'Sesiones', data:SESSIONS, borderColor:NAVY, backgroundColor:'transparent', tension:.25, pointRadius:2, yAxisID:'y'},
+    {label:'Vistas (page_view)', data:VIEWS, borderColor:ORANGE, backgroundColor:'transparent', tension:.25, pointRadius:2, yAxisID:'y1'}
+  ]},
+  options:{
+    responsive:true, interaction:{mode:'index', intersect:false},
+    scales:{
+      y:{position:'left', title:{display:true,text:'Sesiones'}},
+      y1:{position:'right', grid:{drawOnChartArea:false}, title:{display:true,text:'Vistas'}}
+    },
+    plugins:{legend:{position:'bottom'}}
+  },
+  plugins:[launchLinePlugin()]
+});
+
+new Chart(document.getElementById('chartBookingsIncome'), {
+  type:'bar',
+  data:{labels:DATES, datasets:[
+    {type:'bar', label:'Reservas Ok reales', data:OKCOUNT, backgroundColor:'rgba(24,43,74,0.55)', yAxisID:'y'},
+    {type:'line', label:'Income real (USD)', data:OKINCOME, borderColor:CORAL, backgroundColor:'transparent', tension:.25, pointRadius:2, yAxisID:'y1'}
+  ]},
+  options:{
+    responsive:true, interaction:{mode:'index', intersect:false},
+    scales:{
+      y:{position:'left', title:{display:true,text:'# Reservas Ok'}},
+      y1:{position:'right', grid:{drawOnChartArea:false}, title:{display:true,text:'USD'}}
+    },
+    plugins:{legend:{position:'bottom'}}
+  },
+  plugins:[launchLinePlugin()]
+});
+
+new Chart(document.getElementById('chartCVR'), {
+  type:'line',
+  data:{labels:DATES, datasets:[
+    {label:'CVR real (Sesión → Reserva Ok) %', data:CVR, borderColor:'#1E8E5A', backgroundColor:'rgba(30,142,90,0.12)', fill:true, tension:.3, pointRadius:2}
+  ]},
+  options:{
+    responsive:true,
+    scales:{y:{title:{display:true,text:'%'}}},
+    plugins:{legend:{position:'bottom'}}
+  },
+  plugins:[launchLinePlugin()]
+});
+
+const CH_DATES = ["2026-06-01", "2026-06-02", "2026-06-03", "2026-06-04", "2026-06-05", "2026-06-06", "2026-06-07", "2026-06-08", "2026-06-09", "2026-06-10", "2026-06-11", "2026-06-12", "2026-06-13", "2026-06-14", "2026-06-15", "2026-06-16", "2026-06-17", "2026-06-18", "2026-06-19", "2026-06-20", "2026-06-21", "2026-06-22", "2026-06-23", "2026-06-24", "2026-06-25", "2026-06-26", "2026-06-27", "2026-06-28", "2026-06-29", "2026-06-30", "2026-07-01", "2026-07-02"];
+const CH_DATA = {"Direct": [347.0, 321.0, 369.0, 370.0, 336.0, 275.0, 306.0, 325.0, 359.0, 267.0, 334.0, 303.0, 286.0, 316.0, 358.0, 897.0, 508.0, 476.0, 449.0, 453.0, 420.0, 489.0, 572.0, 485.0, 528.0, 1148.0, 428.0, 450.0, 429.0, 445.0, 465.0, 524.0], "Referral": [434.0, 427.0, 426.0, 359.0, 327.0, 281.0, 390.0, 409.0, 400.0, 382.0, 367.0, 309.0, 332.0, 361.0, 363.0, 348.0, 317.0, 328.0, 313.0, 303.0, 351.0, 377.0, 383.0, 439.0, 415.0, 378.0, 290.0, 414.0, 488.0, 463.0, 438.0, 410.0], "RY_App": [247.0, 183.0, 182.0, 437.0, 252.0, 238.0, 296.0, 352.0, 331.0, 282.0, 419.0, 302.0, 397.0, 452.0, 415.0, 368.0, 297.0, 378.0, 334.0, 446.0, 537.0, 496.0, 321.0, 281.0, 222.0, 251.0, 312.0, 352.0, 339.0, 303.0, 321.0, 309.0], "Mensajeria automatica": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 2.0, 0.0, 0.0, 0.0, 2.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 879.0, 172.0, 54.0, 66.0, 21.0, 23.0, 23.0], "Paid Search": [99.0, 132.0, 220.0, 217.0, 242.0, 154.0, 187.0, 183.0, 168.0, 167.0, 178.0, 168.0, 113.0, 180.0, 178.0, 210.0, 244.0, 209.0, 184.0, 165.0, 195.0, 198.0, 160.0, 132.0, 139.0, 111.0, 90.0, 118.0, 108.0, 104.0, 84.0, 98.0], "Digital Signage": [1.0, 9.0, 8.0, 5.0, 8.0, 3.0, 2.0, 6.0, 5.0, 5.0, 3.0, 5.0, 3.0, 13.0, 8.0, 11.0, 7.0, 5.0, 14.0, 4.0, 7.0, 4.0, 6.0, 3.0, 3.0, 1.0, 3.0, 0.0, 3.0, 8.0, 8.0, 9.0]};
+const chColors = ['#182B4A','#F26522','#6B7280','#1E8E5A','#8E44AD','#E84B2A'];
+const chKeys = ['Direct','Referral','RY_App','Mensajeria automatica','Paid Search','Digital Signage'];
+chKeys.forEach(function(key, i){
+  new Chart(document.getElementById('chChannel'+i), {
+    type:'line',
+    data:{labels:CH_DATES, datasets:[{label:key, data:CH_DATA[key], borderColor:chColors[i], backgroundColor:'transparent', tension:.3, pointRadius:1.5}]},
+    options:{responsive:true, plugins:{legend:{display:false}}, scales:{y:{title:{display:true,text:'Sesiones'}}}},
+    plugins:[launchLinePlugin()]
+  });
+});
+</script>
+
+</body>
+</html>
